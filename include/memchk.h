@@ -2,9 +2,8 @@
 
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <map>
-#include <malloc.h>
+#include <cstdlib>
 
 #if defined(__GNUC__) || defined(__clang__)
 #define KT_NORETURN_ATTRIBUTE __attribute__((noreturn))
@@ -25,8 +24,8 @@ namespace kt
 
    public:
     void* kt_malloc(size_t size) noexcept;  // malloc memory
-    KT_NORETURN_ATTRIBUTE void kt_free(void* ptr) noexcept;      // free memory
-    KT_NORETURN_ATTRIBUTE void  kt_dump() noexcept;               // check if memory leaked
+    void  kt_free(void* ptr) noexcept;      // free memory
+    void  kt_dump() noexcept;               // check if memory leaked
 
    private:
     std::map<void*, size_t> __memory_map;  // Save memory address and size
@@ -50,3 +49,14 @@ namespace kt
     }
   };
 }  // namespace kt
+
+// define C++ style memory manager
+#if defined(__MEM_CHK_KT_CPP_MM_)
+#define __MEM_CHK_KT_CPP_MM_ 1
+
+#if defined(__ENABLE_KT_NEW)
+void* operator new(size_t size);
+void  operator delete(void* ptr) noexcept;
+#endif  // #if defined(__ENABLE_KT_NEW)
+
+#endif  // if defined (__MEM_CHK_KT_CPP_MM_)

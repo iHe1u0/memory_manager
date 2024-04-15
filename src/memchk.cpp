@@ -1,5 +1,5 @@
-
 #include <memchk.h>
+#include <sstream>
 
 namespace kt
 {
@@ -16,7 +16,7 @@ namespace kt
       {
         if (it->first != nullptr)
         {
-          free(it->first);
+          std::free(it->first);
           it = __memory_map.erase(it);
         }
         else
@@ -31,7 +31,7 @@ namespace kt
 
   void* memchk::kt_malloc(size_t size) noexcept
   {
-    void* ptr = malloc(size);
+    void* ptr = std::malloc(size);
     if (ptr == nullptr)
     {
       return nullptr;
@@ -40,20 +40,20 @@ namespace kt
     return ptr;
   }
 
-  KT_NORETURN_ATTRIBUTE void memchk::kt_free(void* ptr) noexcept
+  void memchk::kt_free(void* ptr) noexcept
   {
     if (ptr != nullptr && !__memory_map.empty())
     {
       auto address = __memory_map.find(ptr);
       if (address != __memory_map.end())
       {
-        free(ptr);
+        std::free(ptr);
         __memory_map.erase(ptr);
       }
     }
   }
 
-  KT_NORETURN_ATTRIBUTE void memchk::kt_dump() noexcept
+  void memchk::kt_dump() noexcept
   {
     if (!__memory_map.empty())
     {
@@ -92,3 +92,23 @@ namespace kt
   }
 
 }  // namespace kt
+
+#if defined(__ENABLE_KT_NEW)
+void* operator new(size_t size)
+{
+  void* ptr = std::malloc(size);
+  if (ptr == nullptr)
+  {
+    throw std::bad_alloc();  // throw exception when malloc failed
+  }
+  return ptr;
+}
+
+void operator delete(void* ptr) noexcept
+{
+  if (ptr != nullptr)
+  {
+    std::free(ptr);
+  }
+}
+#endif  // #if defined(__ENABLE_KT_NEW)
